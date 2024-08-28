@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NFC Reader</title>
+</head>
+<body>
+    <h1>NFC Reader Demo</h1>
+    <button id="readNfcButton">Read NFC Tag</button>
+    <p id="output"></p>
+
+    <script>
+        document.getElementById("readNfcButton").addEventListener("click", async () => {
+            if ("NDEFReader" in window) {
+                try {
+                    const ndef = new NDEFReader();
+                    await ndef.scan();
+                    document.getElementById("output").textContent = "NFC scan started. Hold your NFC tag close to the device.";
+                    
+                    ndef.onreading = (event) => {
+                        const message = event.message;
+                        let outputText = "NFC tag detected:\n";
+                        for (const record of message.records) {
+                            outputText += `Record type: ${record.recordType}\n`;
+                            outputText += `MIME type: ${record.mediaType}\n`;
+                            outputText += `Data: ${new TextDecoder().decode(record.data)}\n`;
+
+                            switch (record.recordType) {
+                                case "text":
+                                    const textDecoder = new TextDecoder(record.encoding);
+                                    outputText += `Text: ${textDecoder.decode(record.data)}\n`;
+                                    break;
+                                case "url":
+                                    outputText += `URL: ${record.data}\n`;
+                                    break;
+                                default:
+                                    outputText += "Unknown record type.\n";
+                            }
+                        }
+                        document.getElementById("output").textContent = outputText;
+                    };
+
+                } catch (error) {
+                    document.getElementById("output").textContent = "Error reading NFC tag: " + error;
+                }
+            } else {
+                document.getElementById("output").textContent = "Web NFC is not supported on this device.";
+            }
+        });
+    </script>
+</body>
+</html>
